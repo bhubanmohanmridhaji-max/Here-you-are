@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kitchen MIS</title>
+<style>
+:root{--g:#1f6f5c;--gd:#14493c;--o:#e07b24;--bg:#f5f3ee;--card:#fff;--tx:#222;--mut:#6b6b6b;--bd:#e2ded4;--bad:#c0392b;--ok:#2e8b57}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--g);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px;position:sticky;top:0;z-index:5}
+header .logo{width:40px;height:40px;border-radius:8px;background:#fff;object-fit:contain;display:flex;align-items:center;justify-content:center;color:var(--g);font-weight:700}
+header .t{flex:1;min-width:0}header .t b{font-size:17px;display:block}header .t small{opacity:.85}
+header .u{font-size:12px;text-align:right}
+.wrap{display:flex;min-height:calc(100vh - 60px)}
+nav{width:190px;background:var(--gd);padding:8px;flex-shrink:0}
+nav button{display:block;width:100%;text-align:left;background:none;border:0;color:#d9efe8;padding:10px 12px;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:2px}
+nav button.on,nav button:hover{background:var(--o);color:#fff}
+main{flex:1;padding:16px;min-width:0}
+@media(max-width:760px){.wrap{display:block}nav{width:auto;display:flex;overflow-x:auto;padding:6px}nav button{white-space:nowrap;width:auto;margin:0 4px 0 0}}
+h2{margin:0 12px 0 0;font-size:20px}h3{margin:0 0 8px;font-size:15px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.grid .card{margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.kpi small{color:var(--mut);display:block}.kpi b{font-size:22px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle}
+th{background:#faf8f3;font-size:12px;text-transform:uppercase;color:var(--mut)}
+.tw{overflow-x:auto}
+input,select,textarea{font:inherit;padding:6px 8px;border:1px solid #cfcabd;border-radius:6px;background:#fff;max-width:100%}
+input[type=number]{width:90px}
+input:disabled{background:#f2f0ea;color:#333}
+.btn{background:var(--g);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit;display:inline-block}
+.btn:hover{background:var(--gd)}.btn.s{background:#fff;color:var(--g);border:1px solid var(--g)}
+.btn.o{background:var(--o)}.btn.d{background:var(--bad)}
+.lnk{background:none;border:0;color:var(--g);cursor:pointer;padding:4px 0;font:inherit}
+.x{background:none;border:0;color:var(--bad);font-size:18px;cursor:pointer}
+.chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;background:#eee}
+.chip.ok{background:#dff3e8;color:var(--ok)}.chip.bad{background:#fbe0dc;color:var(--bad)}.chip.warn{background:#fdecd2;color:#a0610f}
+.meal{border-top:1px dashed var(--bd);padding-top:8px;margin-top:8px}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.mt td{border:0;padding:2px 2px}.mt input:not([type=number]){width:100%}.mt .w{white-space:nowrap}.mt input[type=number]{width:70px}
+.al{padding:8px 10px;border-left:4px solid var(--o);background:#fff7ec;margin-bottom:6px;border-radius:4px}
+.al.r{border-color:var(--bad);background:#fdf0ee}
+.banner{background:#e8f4f0;border:1px solid #b9ddd2;padding:8px 12px;border-radius:8px;margin-bottom:12px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 12px;overflow:auto;z-index:20}
+.md{background:#fff;border-radius:12px;padding:18px;width:100%;max-width:520px}
+.md label.row{display:block;margin:6px 0}.md .cb{display:inline-block;margin:2px 10px 2px 0}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;display:none;z-index:30;max-width:90%}
+.login{max-width:340px;margin:8vh auto;background:#fff;padding:24px;border-radius:14px;box-shadow:0 4px 20px #0002;text-align:center}
+.login select,.login input{width:100%;margin:6px 0}
+.bars{display:flex;gap:8px;align-items:flex-end;height:110px}
+.bars div{flex:1;text-align:center;font-size:11px}.bars i{display:block;background:var(--o);border-radius:4px 4px 0 0;min-height:2px}
+.muted{color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="modal"></div><div id="toast"></div>
+<script>
+const KEY='fp_kmis_v1';
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MEALS=['Breakfast','Lunch'];
+const CATS=['Dry Store / Groceries','Vegetables & Fruits','Dairy & Perishables','Packaging & Consumables'];
+const WTYPES=['Preparation waste','Leftover food','Plate waste','Spoilage / expired','Other'];
+const VIEWS=[['dash','Dashboard','📊'],['pax','Daily Pax','👥'],['menu','Weekly Menu','🍽️'],['prod','Production','🍳'],['inv','Inventory','📦'],['waste','Waste Entry','🗑️'],['close','Shift Closing','🔒'],['rep','MIS Reports','📈'],['set','Settings','⚙️']];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const f1=n=>(Math.round(n*10)/10).toLocaleString('en-IN');
+const f0=n=>Math.round(n).toLocaleString('en-IN');
+const pad=n=>String(n).padStart(2,'0');
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const todayStr=()=>fmtD(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return fmtD(d)};
+const dayIdx=s=>(new Date(s+'T00:00:00').getDay()+6)%7;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',3500)}
+function openModal(h){$('#modal').innerHTML='<div class="ov" onclick="if(event.target===this)closeModal()"><div class="md">'+h+'</div></div>'}
+function closeModal(){$('#modal').innerHTML=''}
+
+/* ---------- data ---------- */
+const OUT=[['KCC',450,750],['Hari University',450,750],['Academy',0,0],['North School',450,750],['HIS',450,750],['Event 1',0,0],['Event 2',0,0],['Parivar Café',450,750],['Rainbow Restaurant',0,0],['AMT Snacks',500,0]];
+const defaultDB=()=>({
+ company:{name:'Parivar Cafe',by:'Focus Prism',tagline:'Food for the Soul',logo:''},
+ users:{owner:{label:'Admin / Owner',pw:'owner123',role:'owner'},gm:{label:'General Manager',pw:'gm123',role:'gm'},prod:{label:'Production Head',pw:'prod123',role:'prod'}},
+ outlets:OUT.map((o,i)=>({id:'o'+(i+1),name:o[0],bf:o[1],ln:o[2]})),
+ menus:{},menuMeta:{},pax:{},prod:{},waste:[],inv:[],invLog:[],close:{},left:{}
+});
+let db;
+function load(){try{db=Object.assign(defaultDB(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){db=defaultDB()}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Could not save – storage full or blocked. Export a backup!')}}
+load();
+let me=null;try{me=sessionStorage.getItem('fp_user')}catch(e){}
+const ui={view:'dash',date:todayStr(),menuO:null,prodO:null,prodM:'Breakfast',closeM:'Breakfast',invCat:CATS[0],rf:addDays(todayStr(),-6),rt:todayStr(),ro:'all',wO:null,wM:'Breakfast'};
+const role=()=>db.users[me].role;
+const isOwner=()=>role()==='owner';
+const isMgr=()=>role()==='owner'||role()==='gm';
+const outletById=id=>db.outlets.find(o=>o.id===id);
+const outletOpts=(sel,all)=>(all?'<option value="all">All outlets</option>':'')+db.outlets.map(o=>`<option value="${o.id}" ${o.id===sel?'selected':''}>${esc(o.name)}</option>`).join('');
+const mealOpts=sel=>MEALS.map(m=>`<option ${m===sel?'selected':''}>${m}</option>`).join('');
+const cap=(o,m)=>num(m==='Breakfast'?o.bf:o.ln);
+const getMenu=(oid,d,m)=>((db.menus[oid]||{})[d]||{})[m]||[];
+function setMenu(oid,d,m,a){db.menus[oid]=db.menus[oid]||{};db.menus[oid][d]=db.menus[oid][d]||{};db.menus[oid][d][m]=a}
+const menuTotal=a=>a.reduce((s,x)=>s+num(x.g),0);
+const paxOf=(d,oid,m)=>num(((db.pax[d]||{})[oid]||{})[m]);
+const pkey=(d,o,m)=>d+'|'+o+'|'+m;
+
+/* ---------- stats ---------- */
+function prodSum(key,f){return (db.prod[key]||[]).reduce((s,x)=>s+num(x[f]),0)}
+function wasteSum(d,oid,m){return db.waste.filter(w=>w.date===d&&w.o===oid&&(!m||w.m===m)).reduce((s,w)=>s+num(w.q),0)}
+function dayStats(d,oid){let pax=0,prod=0,disp=0;MEALS.forEach(m=>{pax+=paxOf(d,oid,m);const k=pkey(d,oid,m);prod+=prodSum(k,'prod');disp+=prodSum(k,'disp')});return{pax,prod,disp,waste:wasteSum(d,oid)}}
+function ppDisp(d,o,m){const pax=paxOf(d,o.id,m),disp=prodSum(pkey(d,o.id,m),'disp'),c=cap(o,m),pp=pax?disp*1000/pax:0;return{pp,cap:c,over:!!c&&pp>c+0.5}}
+
+/* ---------- csv ---------- */
+function csv(rows){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')).join('\r\n')}
+function parseCSV(t){const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);c='';rows.push(r);r=[]}else c+=ch}if(c!==''||r.length){r.push(c);rows.push(r)}return rows.filter(r=>r.some(x=>x.trim()!==''))}
+function download(name,text,type){const b=new Blob(['\uFEFF'+text],{type:type||'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ---------- shell ---------- */
+function go(v){ui.view=v;render()}
+function setDate(v){if(v){ui.date=v;render()}}
+const dateBar=()=>`<button class="btn s" onclick="setDate(addDays(ui.date,-1))">‹</button><input type="date" value="${ui.date}" onchange="setDate(this.value)"><button class="btn s" onclick="setDate(addDays(ui.date,1))">›</button><span class="muted">${DAYS[dayIdx(ui.date)]}</span>`;
+const logoHTML=()=>db.company.logo?`<img class="logo" src="${db.company.logo}" alt="">`:`<div class="logo">${esc((db.company.name||'K')[0])}</div>`;
+function render(){
+ if(!me||!db.users[me])return renderLogin();
+ const c=db.company;document.title=c.name+' – Kitchen MIS';
+ $('#app').innerHTML=`<header>${logoHTML()}<div class="t"><b>${esc(c.name)}</b><small>${esc(c.by)} · ${esc(c.tagline)}</small></div><div class="u">${esc(db.users[me].label)}<br><button class="lnk" style="color:#fff" onclick="logout()">Log out</button></div></header>
+ <div class="wrap"><nav>${VIEWS.map(v=>`<button class="${ui.view===v[0]?'on':''}" onclick="go('${v[0]}')">${v[2]} ${v[1]}</button>`).join('')}</nav><main>${V[ui.view]()}</main></div>`;
+}
+function renderLogin(){
+ const c=db.company;
+ $('#app').innerHTML=`<div class="login"><div style="display:flex;justify-content:center">${logoHTML()}</div><h2 style="margin:10px 0 0">${esc(c.name)}</h2><div class="muted">${esc(c.by)} · Kitchen MIS</div><br>
+ <select id="lu">${Object.keys(db.users).map(u=>`<option value="${u}">${esc(db.users[u].label)}</option>`).join('')}</select>
+ <input id="lp" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')login()"><button class="btn" style="width:100%;margin-top:6px" onclick="login()">Log in</button></div>`;
+}
+function login(){const u=$('#lu').value,p=$('#lp').value;if(db.users[u]&&db.users[u].pw===p){me=u;try{sessionStorage.setItem('fp_user',u)}catch(e){}ui.view='dash';render()}else toast('Wrong password')}
+function logout(){me=null;try{sessionStorage.removeItem('fp_user')}catch(e){}render()}
+
+const V={};
+
+/* ---------- dashboard ---------- */
+V.dash=function(){
+ const d=ui.date;const T={pax:0,prod:0,disp:0,waste:0};
+ const rows=db.outlets.map(o=>{const s=dayStats(d,o.id);for(const k in T)T[k]+=s[k];return `<tr><td>${esc(o.name)}</td><td>${f0(s.pax)}</td><td>${f1(s.prod)}</td><td>${f1(s.disp)}</td><td>${f1(s.waste)}</td><td>${s.prod?f1(s.waste/s.prod*100)+'%':'–'}</td></tr>`}).join('');
+ const al=[];
+ db.outlets.forEach(o=>MEALS.forEach(m=>{
+  const r=ppDisp(d,o,m);if(r.over)al.push(['r',`Dispatch over limit – ${o.name} ${m}: ${f0(r.pp)} g/person (limit ${r.cap} g)`]);
+  const t=menuTotal(getMenu(o.id,dayIdx(d),m));if(cap(o,m)&&t>cap(o,m))al.push(['r',`Menu over limit – ${o.name} ${m}: ${t} g (limit ${cap(o,m)} g)`]);
+  const k=pkey(d,o.id,m);if(prodSum(k,'prod')>0&&!db.close[k])al.push(['',`Shift not closed – ${o.name} ${m}`]);
+ }));
+ db.inv.filter(i=>num(i.s)<=num(i.r)).forEach(i=>al.push(['',`Low stock – ${i.n}: ${f1(num(i.s))} ${i.u} (reorder at ${i.r})`]));
+ const days=[];for(let i=6;i>=0;i--)days.push(addDays(d,-i));
+ const w=days.map(x=>db.waste.filter(y=>y.date===x).reduce((s,y)=>s+num(y.q),0));const mx=Math.max(...w,1);
+ return `<div class="bar"><h2>Dashboard</h2>${dateBar()}</div>
+ <div class="kpis"><div class="kpi"><small>Pax served (planned)</small><b>${f0(T.pax)}</b></div><div class="kpi"><small>Produced (kg)</small><b>${f1(T.prod)}</b></div><div class="kpi"><small>Dispatched (kg)</small><b>${f1(T.disp)}</b></div><div class="kpi"><small>Waste (kg)</small><b>${f1(T.waste)}</b></div><div class="kpi"><small>Waste % of produced</small><b>${T.prod?f1(T.waste/T.prod*100)+'%':'–'}</b></div></div>
+ <div class="card"><h3>Alerts</h3>${al.length?al.map(a=>`<div class="al ${a[0]}">${esc(a[1])}</div>`).join(''):'<span class="muted">No alerts 🎉</span>'}</div>
+ <div class="card tw"><h3>Outlets on ${d}</h3><table><tr><th>Outlet</th><th>Pax</th><th>Produced kg</th><th>Dispatched kg</th><th>Waste kg</th><th>Waste %</th></tr>${rows}<tr><td><b>Total</b></td><td><b>${f0(T.pax)}</b></td><td><b>${f1(T.prod)}</b></td><td><b>${f1(T.disp)}</b></td><td><b>${f1(T.waste)}</b></td><td></td></tr></table></div>
+ <div class="card"><h3>Waste – last 7 days (kg)</h3><div class="bars">${w.map((v,i)=>`<div>${f1(v)}<i style="height:${v/mx*80}px"></i>${days[i].slice(5)}</div>`).join('')}</div></div>`;
+};
+
+/* ---------- pax ---------- */
+V.pax=function(){
+ const d=ui.date;
+ const rows=db.outlets.map(o=>`<tr><td><b>${esc(o.name)}</b></td>${MEALS.map(m=>`<td><input type="number" min="0" value="${paxOf(d,o.id,m)||''}" onchange="setPax('${o.id}','${m}',this.value)"></td>`).join('')}<td id="pt_${o.id}">${f0(paxOf(d,o.id,'Breakfast')+paxOf(d,o.id,'Lunch'))}</td></tr>`).join('');
+ return `<div class="bar"><h2>Daily Pax</h2>${dateBar()}<button class="btn s" onclick="copyPax()">Copy from previous day</button></div>
+ <div class="card tw"><table><tr><th>Outlet</th><th>Breakfast pax</th><th>Lunch pax</th><th>Total</th></tr>${rows}</table></div>
+ <div id="plan">${planHTML()}</div>`;
+};
+function planHTML(){
+ const d=ui.date,di=dayIdx(d);let rows='';const comb={Breakfast:{},Lunch:{}};
+ db.outlets.forEach(o=>MEALS.forEach(m=>{const pax=paxOf(d,o.id,m);if(!pax)return;const it=getMenu(o.id,di,m);
+  if(!it.length){rows+=`<tr><td>${esc(o.name)}</td><td>${m}</td><td>${f0(pax)}</td><td class="muted">No menu set for ${DAYS[di]}</td></tr>`;return}
+  rows+=`<tr><td>${esc(o.name)}</td><td>${m}</td><td>${f0(pax)}</td><td>${it.map(x=>esc(x.n)+' <b>'+f1(num(x.g)*pax/1000)+' kg</b>').join(' · ')}</td></tr>`;
+  it.forEach(x=>{const k=x.n.trim().toLowerCase();comb[m][k]=comb[m][k]||{n:x.n,kg:0};comb[m][k].kg+=num(x.g)*pax/1000});}));
+ const cr=MEALS.map(m=>{const l=Object.values(comb[m]);return l.length?`<tr><td><b>${m}</b></td><td>${l.map(x=>esc(x.n)+' <b>'+f1(x.kg)+' kg</b>').join(' · ')}</td></tr>`:''}).join('');
+ return `<div class="card tw"><h3>Production plan for ${d} (from menu × pax)</h3>${rows?`<table><tr><th>Outlet</th><th>Meal</th><th>Pax</th><th>Quantity to prepare</th></tr>${rows}</table>`:'<span class="muted">Enter pax to see the plan.</span>'}</div>
+ ${cr?`<div class="card tw"><h3>Combined requirement – all outlets</h3><table>${cr}</table></div>`:''}`;
+}
+function setPax(o,m,v){const d=ui.date;db.pax[d]=db.pax[d]||{};db.pax[d][o]=db.pax[d][o]||{};db.pax[d][o][m]=num(v);save();
+ const c=$('#pt_'+o);if(c)c.textContent=f0(paxOf(d,o,'Breakfast')+paxOf(d,o,'Lunch'));$('#plan').innerHTML=planHTML()}
+function copyPax(){const p=db.pax[addDays(ui.date,-1)];if(!p)return toast('No pax entered for the previous day');db.pax[ui.date]=JSON.parse(JSON.stringify(p));save();render()}
+
+/* ---------- weekly menu + COPY ---------- */
+const badge=(o,d,m)=>{const t=menuTotal(getMenu(o.id,d,m)),c=cap(o,m);return c?`<span class="chip ${t>c?'bad':'ok'}">${t} / ${c} g</span>`:`<span class="chip">${t} g · no limit</span>`};
+function mealBlock(o,d,m,ed){
+ const items=getMenu(o.id,d,m);
+ return `<div class="meal" id="mc_${d}_${m}"><div class="mh"><b>${m}</b><span id="b_${d}_${m}">${badge(o,d,m)}</span></div><table class="mt">${items.map((x,i)=>`<tr><td><input value="${esc(x.n)}" placeholder="Item" ${ed?'':'disabled'} onchange="editItem('${o.id}',${d},'${m}',${i},'n',this.value)"></td><td class="w"><input type="number" min="0" value="${x.g==null?'':x.g}" ${ed?'':'disabled'} onchange="editItem('${o.id}',${d},'${m}',${i},'g',this.value)"> g</td>${ed?`<td><button class="x" title="Remove" onclick="delItem('${o.id}',${d},'${m}',${i})">×</button></td>`:''}</tr>`).join('')}</table>${ed?`<button class="lnk" onclick="addItem('${o.id}',${d},'${m}')">+ Add item</button>`:''}</div>`;
+}
+V.menu=function(){
+ const o=outletById(ui.menuO)||db.outlets[0];ui.menuO=o.id;const ed=isMgr();const meta=db.menuMeta[o.id];
+ return `<div class="bar"><h2>Weekly Menu</h2><select onchange="ui.menuO=this.value;render()">${outletOpts(o.id)}</select>
+ ${ed?`<button class="btn o" onclick="copyModal()">⧉ Copy menu to other outlet</button><button class="btn s" onclick="copyDayModal()">Copy a day</button>`:''}
+ <button class="btn s" onclick="exportMenu('${o.id}')">⬇ Download (CSV/Excel)</button><button class="btn s" onclick="exportMenu('all')">⬇ All outlets</button>
+ ${ed?`<label class="btn s">⬆ Upload<input type="file" accept=".csv" hidden onchange="importMenu(this.files[0]);this.value=''"></label>`:''}</div>
+ ${meta?`<div class="banner">This menu was copied from <b>${esc((outletById(meta.from)||{name:'another outlet'}).name)}</b> on ${meta.at}. It is a separate copy – edit it freely, the original is not affected.</div>`:''}
+ ${!ed?'<div class="banner">Only the General Manager or Owner can change menus.</div>':''}
+ <div class="muted" style="margin-bottom:8px">Grams are per person. Limit: ${cap(o,'Breakfast')?cap(o,'Breakfast')+' g breakfast':'no breakfast limit'}, ${cap(o,'Lunch')?cap(o,'Lunch')+' g lunch':'no lunch limit'}. Liquids like sambar can be left blank.</div>
+ <div class="grid">${DAYS.map((dn,d)=>`<div class="card"><h3>${dn}</h3>${MEALS.map(m=>mealBlock(o,d,m,ed)).join('')}</div>`).join('')}</div>`;
+};
+function addItem(o,d,m){const a=getMenu(o,d,m).slice();a.push({n:'',g:''});setMenu(o,d,m,a);save();render();const r=document.querySelector(`#mc_${d}_${m} tr:last-child input`);if(r)r.focus()}
+function editItem(o,d,m,i,k,v){const a=getMenu(o,d,m);if(!a[i])return;a[i][k]=k==='g'?(v===''?'':num(v)):v.trim();delete db.menuMeta[o+'_x'];save();const b=$(`#b_${d}_${m}`);if(b)b.innerHTML=badge(outletById(o),d,m)}
+function delItem(o,d,m,i){getMenu(o,d,m).splice(i,1);save();render()}
+function chk(name,items,checkedAll){return items.map(it=>`<label class="cb"><input type="checkbox" class="${name}" value="${it[0]}" ${checkedAll?'checked':''}> ${esc(it[1])}</label>`).join('')}
+function copyModal(){
+ const src=ui.menuO;
+ openModal(`<h3>Copy menu to another outlet</h3>
+ <label class="row">Copy from <select id="cpSrc" onchange="refreshDest()">${outletOpts(src)}</select></label>
+ <div class="row"><b>Copy to</b> <span id="cpDests">${destChecks(src)}</span></div>
+ <div class="row"><b>Days</b><br>${chk('cpDay',DAYS.map((x,i)=>[i,x]),true)}</div>
+ <div class="row"><b>Meals</b><br>${chk('cpMeal',MEALS.map(x=>[x,x]),true)}</div>
+ <div class="row"><b>If the destination already has a menu</b><br>
+  <label class="cb"><input type="radio" name="cpMode" value="replace" checked> Replace it</label>
+  <label class="cb"><input type="radio" name="cpMode" value="merge"> Add to it (skip items already there)</label></div>
+ <label class="row"><input type="checkbox" id="cpScale"> If over the destination's gram limit, reduce quantities proportionally</label>
+ <p class="muted">After copying you can edit every item and quantity in the destination outlet.</p>
+ <div style="text-align:right"><button class="btn s" onclick="closeModal()">Cancel</button> <button class="btn o" onclick="doCopy()">Copy</button></div>`);
+}
+function destChecks(src){return db.outlets.filter(o=>o.id!==src).map(o=>`<label class="cb"><input type="checkbox" class="cpDest" value="${o.id}"> ${esc(o.name)}</label>`).join('')}
+function refreshDest(){$('#cpDests').innerHTML=destChecks($('#cpSrc').value)}
+const picked=c=>[...document.querySelectorAll('.'+c+':checked')].map(x=>x.value);
+function doCopy(){
+ const src=$('#cpSrc').value,dests=picked('cpDest'),days=picked('cpDay').map(Number),meals=picked('cpMeal');
+ const mode=document.querySelector('input[name=cpMode]:checked').value,scale=$('#cpScale').checked;
+ if(!dests.length||!days.length||!meals.length)return toast('Choose at least one destination outlet, day and meal');
+ const warns=[];let cells=0;
+ dests.forEach(did=>{const o=outletById(did);
+  days.forEach(d=>meals.forEach(m=>{
+   let items=getMenu(src,d,m).map(x=>({n:x.n,g:x.g}));if(!items.length)return;
+   const ex=getMenu(did,d,m);
+   if(mode==='merge'){const names=ex.map(x=>x.n.toLowerCase());items=ex.map(x=>({n:x.n,g:x.g})).concat(items.filter(x=>!names.includes(x.n.toLowerCase())))}
+   const cp=cap(o,m);let tot=menuTotal(items);
+   if(scale&&cp&&tot>cp){const k=cp/tot;items=items.map(x=>({n:x.n,g:x.g===''?'':Math.floor(num(x.g)*k/5)*5}));tot=menuTotal(items)}
+   setMenu(did,d,m,items);cells++;
+   if(cp&&tot>cp)warns.push(`${o.name} · ${DAYS[d]} ${m}: ${tot} g (limit ${cp} g)`);
+  }));
+  db.menuMeta[did]={from:src,at:todayStr()};
+ });
+ save();closeModal();ui.menuO=dests[0];render();
+ if(!cells)toast('Nothing copied – the source menu is empty for the chosen days/meals');
+ else if(warns.length)openModal(`<h3>Copied – please review</h3><p>These meals are above the destination outlet's limit. Edit them in the menu:</p>${warns.map(w=>`<div class="al r">${esc(w)}</div>`).join('')}<div style="text-align:right"><button class="btn" onclick="closeModal()">OK</button></div>`);
+ else toast(`Menu copied to ${dests.length} outlet(s). You can now edit it.`);
+}
+function copyDayModal(){
+ openModal(`<h3>Copy a day within ${esc(outletById(ui.menuO).name)}</h3>
+ <label class="row">Copy from <select id="cdSrc">${DAYS.map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></label>
+ <div class="row"><b>To days</b><br>${chk('cdDay',DAYS.map((x,i)=>[i,x]),false)}</div>
+ <div class="row"><b>Meals</b><br>${chk('cdMeal',MEALS.map(x=>[x,x]),true)}</div>
+ <p class="muted">Replaces the chosen days' items.</p>
+ <div style="text-align:right"><button class="btn s" onclick="closeModal()">Cancel</button> <button class="btn o" onclick="doCopyDay()">Copy</button></div>`);
+}
+function doCopyDay(){
+ const o=ui.menuO,s=+$('#cdSrc').value,days=picked('cdDay').map(Number).filter(d=>d!==s),meals=picked('cdMeal');
+ if(!days.length||!meals.length)return toast('Choose target days and meals');
+ days.forEach(d=>meals.forEach(m=>setMenu(o,d,m,getMenu(o,s,m).map(x=>({n:x.n,g:x.g})))));
+ save();closeModal();render();toast('Day copied')
+}
+function exportMenu(which){
+ const ids=which==='all'?db.outlets.map(o=>o.id):[which];const rows=[['Outlet','Day','Meal','Item','Grams']];
+ ids.forEach(id=>{const o=outletById(id);DAYS.forEach((dn,d)=>MEALS.forEach(m=>getMenu(id,d,m).forEach(x=>rows.push([o.name,dn,m,x.n,x.g]))))});
+ if(rows.length===1){rows.push([outletById(ids[0]).name,'Monday','Breakfast','Masala Dosa',200],[outletById(ids[0]).name,'Monday','Breakfast','Aloo Masala',100],[outletById(ids[0]).name,'Monday','Breakfast','Peanut Chutney',100],[outletById(ids[0]).name,'Monday','Breakfast','Sambar',''])}
+ download('weekly-menu-'+(which==='all'?'all-outlets':outletById(which).name.replace(/\s+/g,'-'))+'.csv',csv(rows));
+}
+function importMenu(file){
+ if(!file)return;const rd=new FileReader();
+ rd.onload=()=>{
+  const rows=parseCSV(String(rd.result).replace(/^\uFEFF/,''));if(!rows.length)return toast('File is empty');
+  const h=rows.shift().map(x=>x.trim().toLowerCase());const ix=k=>h.indexOf(k);
+  if(['outlet','day','meal','item','grams'].some(k=>ix(k)<0))return toast('First row must be: Outlet, Day, Meal, Item, Grams');
+  const st=[];let bad=0;
+  rows.forEach(r=>{const o=db.outlets.find(x=>x.name.toLowerCase()===(r[ix('outlet')]||'').trim().toLowerCase());const dn=(r[ix('day')]||'').trim().toLowerCase();
+   const d=dn?DAYS.findIndex(x=>x.toLowerCase().startsWith(dn.slice(0,3))):-1;const m=MEALS.find(x=>x.toLowerCase()===(r[ix('meal')]||'').trim().toLowerCase());const n=(r[ix('item')]||'').trim();
+   if(!o||d<0||!m||!n){bad++;return}st.push({o:o.id,d,m,n,g:(r[ix('grams')]||'').trim()===''?'':num(r[ix('grams')])})});
+  const ids=[...new Set(st.map(x=>x.o))];if(!ids.length)return toast('No valid rows found – check outlet names, days and meals');
+  if(!confirm(`Replace the full weekly menu of ${ids.length} outlet(s) with this file?${bad?'\n'+bad+' row(s) will be skipped.':''}`))return;
+  ids.forEach(id=>{db.menus[id]={};delete db.menuMeta[id]});st.forEach(x=>{const a=getMenu(x.o,x.d,x.m).slice();a.push({n:x.n,g:x.g});setMenu(x.o,x.d,x.m,a)});
+  save();render();toast('Menu uploaded for '+ids.length+' outlet(s)');
+ };rd.readAsText(file);
+}
+
+/* ---------- production ---------- */
+function syncProd(key,oid,m){
+ if(db.close[key])return;const d=key.split('|')[0];const menu=getMenu(oid,dayIdx(d),m);let rows=db.prod[key]||[];
+ menu.forEach(it=>{if(!it.n)return;const r=rows.find(x=>!x.x&&x.n.toLowerCase()===it.n.toLowerCase());if(r)r.g=num(it.g);else rows.push({n:it.n,g:num(it.g),prod:'',disp:''})});
+ db.prod[key]=rows.filter(r=>r.x||menu.some(it=>it.n.toLowerCase()===r.n.toLowerCase())||r.prod!==''||r.disp!=='');
+}
+function prodTotals(key,o,m){
+ const pax=paxOf(ui.date,o.id,m),rows=db.prod[key]||[];const plan=rows.reduce((s,r)=>s+num(r.g)*pax/1000,0),p=prodSum(key,'prod'),ds=prodSum(key,'disp'),r=ppDisp(ui.date,o,m);
+ return `<b>Planned:</b> ${f1(plan)} kg &nbsp; <b>Produced:</b> ${f1(p)} kg &nbsp; <b>Dispatched:</b> ${f1(ds)} kg &nbsp; <b>Per person dispatched:</b> ${pax?f0(r.pp)+' g':'–'} ${r.cap?`<span class="chip ${r.over?'bad':'ok'}">${r.over?'OVER limit of ':'within limit of '}${r.cap} g</span>`:'<span class="chip">no limit</span>'}`;
+}
+V.prod=function(){
+ const o=outletById(ui.prodO)||db.outlets[0];ui.prodO=o.id;const m=ui.prodM,key=pkey(ui.date,o.id,m),pax=paxOf(ui.date,o.id,m),locked=!!db.close[key];
+ syncProd(key,o.id,m);const rows=db.prod[key]||[];
+ return `<div class="bar"><h2>Production</h2>${dateBar()}<select onchange="ui.prodO=this.value;render()">${outletOpts(o.id)}</select><select onchange="ui.prodM=this.value;render()">${mealOpts(m)}</select></div>
+ ${locked?'<div class="banner">🔒 This shift is closed. A manager can reopen it in Shift Closing.</div>':''}
+ ${!pax?'<div class="al">No pax entered for this outlet and meal – planned quantities will show 0. Enter pax in Daily Pax.</div>':''}
+ <div class="card tw"><table><tr><th>Item</th><th>g / person</th><th>Planned kg</th><th>Produced kg</th><th>Dispatched kg</th><th></th></tr>
+ ${rows.map((r,i)=>`<tr><td>${esc(r.n)}${r.x?' <span class="chip">extra</span>':''}</td><td>${r.g?f0(r.g):'–'}</td><td>${f1(num(r.g)*pax/1000)}</td><td><input type="number" step="0.1" min="0" value="${r.prod}" ${locked?'disabled':''} onchange="pe('${key}',${i},'prod',this.value)"></td><td><input type="number" step="0.1" min="0" value="${r.disp}" ${locked?'disabled':''} onchange="pe('${key}',${i},'disp',this.value)"></td><td>${r.x&&!locked?`<button class="x" onclick="delExtra('${key}',${i})">×</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No menu set for this day/outlet. Add items in Weekly Menu or add an extra item below.</td></tr>'}</table>
+ ${locked?'':`<button class="lnk" onclick="addExtra('${key}')">+ Add extra item</button>`}
+ <div id="ptot" style="margin-top:10px">${prodTotals(key,o,m)}</div></div>`;
+};
+function pe(key,i,f,v){db.prod[key][i][f]=v===''?'':num(v);save();const[,oid,m]=key.split('|');$('#ptot').innerHTML=prodTotals(key,outletById(oid),m)}
+function addExtra(key){const n=prompt('Item name');if(!n||!n.trim())return;db.prod[key].push({n:n.trim(),g:0,prod:'',disp:'',x:true});save();render()}
+function delExtra(key,i){db.prod[key].splice(i,1);save();render()}
+
+/* ---------- inventory ---------- */
+V.inv=function(){
+ const items=db.inv.filter(i=>i.cat===ui.invCat);
+ return `<div class="bar"><h2>Inventory</h2>${CATS.map(c=>`<button class="btn ${c===ui.invCat?'':'s'}" onclick="ui.invCat='${c.replace(/'/g,"\\'")}';render()">${esc(c)} (${db.inv.filter(i=>i.cat===c).length})</button>`).join('')}</div>
+ <div class="card tw"><table><tr><th>Item</th><th>Stock</th><th>Reorder at</th><th>Status</th><th></th></tr>
+ ${items.map(i=>`<tr><td>${esc(i.n)}</td><td>${f1(num(i.s))} ${esc(i.u)}</td><td>${f1(num(i.r))} ${esc(i.u)}</td><td>${num(i.s)<=num(i.r)?'<span class="chip bad">Low</span>':'<span class="chip ok">OK</span>'}</td><td style="white-space:nowrap"><button class="btn s" onclick="invMove('${i.id}','in')">+ Receive</button> <button class="btn s" onclick="invMove('${i.id}','out')">− Issue</button>${isMgr()?` <button class="lnk" onclick="invEdit('${i.id}')">Edit</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">No items in this category yet.</td></tr>'}</table></div>
+ <div class="card"><h3>Add item to ${esc(ui.invCat)}</h3><input id="in_n" placeholder="Item name"> <select id="in_u">${['kg','g','L','ml','pcs','pkt'].map(u=>`<option>${u}</option>`).join('')}</select> <input id="in_s" type="number" placeholder="Opening stock"> <input id="in_r" type="number" placeholder="Reorder level"> <button class="btn" onclick="invAdd()">Add</button></div>
+ <div class="card tw"><h3>Recent stock movements</h3><table><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Note</th><th>By</th></tr>${db.invLog.slice(-25).reverse().map(l=>`<tr><td>${l.d}</td><td>${esc(l.n)}</td><td>${l.t==='in'?'Received':'Issued'}</td><td>${f1(l.q)}</td><td>${esc(l.note)}</td><td>${esc(l.by)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">None yet</td></tr>'}</table></div>`;
+};
+function invAdd(){const n=$('#in_n').value.trim();if(!n)return toast('Enter item name');db.inv.push({id:uid(),cat:ui.invCat,n,u:$('#in_u').value,s:num($('#in_s').value),r:num($('#in_r').value)});save();render()}
+function invMove(id,t){const i=db.inv.find(x=>x.id===id);openModal(`<h3>${t==='in'?'Receive stock':'Issue stock'} – ${esc(i.n)}</h3><label class="row">Quantity (${esc(i.u)}) <input id="mv_q" type="number" step="0.01"></label><label class="row">Note <input id="mv_n" placeholder="Supplier / issued to"></label><div style="text-align:right"><button class="btn s" onclick="closeModal()">Cancel</button> <button class="btn" onclick="doMove('${id}','${t}')">Save</button></div>`)}
+function doMove(id,t){const i=db.inv.find(x=>x.id===id),q=num($('#mv_q').value);if(q<=0)return toast('Enter a quantity');if(t==='out'&&q>num(i.s)&&!confirm('Issue is more than stock on hand. Continue?'))return;
+ i.s=num(i.s)+(t==='in'?q:-q);db.invLog.push({d:todayStr(),id,n:i.n,t,q,note:$('#mv_n').value,by:db.users[me].label});save();closeModal();render()}
+function invEdit(id){const i=db.inv.find(x=>x.id===id);openModal(`<h3>Edit item</h3><label class="row">Name <input id="ie_n" value="${esc(i.n)}"></label><label class="row">Reorder level <input id="ie_r" type="number" value="${i.r}"></label><label class="row">Stock (correction) <input id="ie_s" type="number" value="${i.s}"></label><label class="row">Category <select id="ie_c">${CATS.map(c=>`<option ${c===i.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></label><div style="text-align:right"><button class="btn d" onclick="invDel('${id}')">Delete</button> <button class="btn s" onclick="closeModal()">Cancel</button> <button class="btn" onclick="invSave('${id}')">Save</button></div>`)}
+function invSave(id){const i=db.inv.find(x=>x.id===id);i.n=$('#ie_n').value.trim()||i.n;i.r=num($('#ie_r').value);i.s=num($('#ie_s').value);i.cat=$('#ie_c').value;save();closeModal();render()}
+function invDel(id){if(!confirm('Delete this item?'))return;db.inv=db.inv.filter(x=>x.id!==id);save();closeModal();render()}
+
+/* ---------- waste ---------- */
+V.waste=function(){
+ const o=outletById(ui.wO)||db.outlets[0];ui.wO=o.id;const list=db.waste.filter(w=>w.date===ui.date);
+ const names=[...new Set(getMenu(o.id,dayIdx(ui.date),ui.wM).map(x=>x.n).concat(db.inv.map(i=>i.n)))];
+ return `<div class="bar"><h2>Waste Entry</h2>${dateBar()}</div>
+ <div class="card"><div class="bar" style="margin:0"><select id="w_o" onchange="ui.wO=this.value;render()">${outletOpts(o.id)}</select><select id="w_m" onchange="ui.wM=this.value;render()">${mealOpts(ui.wM)}</select>
+ <input id="w_i" list="w_dl" placeholder="Item"><datalist id="w_dl">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+ <input id="w_q" type="number" step="0.1" min="0" placeholder="Qty (kg)"><select id="w_t">${WTYPES.map(t=>`<option>${t}</option>`).join('')}</select><input id="w_r" placeholder="Remarks"><button class="btn" onclick="addWaste()">Add</button></div></div>
+ <div class="card tw"><h3>Waste on ${ui.date} – ${f1(list.reduce((s,w)=>s+num(w.q),0))} kg</h3><table><tr><th>Outlet</th><th>Meal</th><th>Item</th><th>Kg</th><th>Type</th><th>Remarks</th><th></th></tr>
+ ${list.map(w=>`<tr><td>${esc((outletById(w.o)||{name:'?'}).name)}</td><td>${w.m}</td><td>${esc(w.i)}</td><td>${f1(num(w.q))}</td><td>${esc(w.t)}</td><td>${esc(w.r)}</td><td>${isMgr()?`<button class="x" onclick="delWaste('${w.id}')">×</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No waste recorded.</td></tr>'}</table></div>`;
+};
+function addWaste(){
+ const o=$('#w_o').value,m=$('#w_m').value,i=$('#w_i').value.trim(),q=num($('#w_q').value);
+ if(!i||q<=0)return toast('Enter item and quantity');
+ if(db.close[pkey(ui.date,o,m)])return toast('This shift is closed – a manager must reopen it first');
+ db.waste.push({id:uid(),date:ui.date,o,m,i,q,t:$('#w_t').value,r:$('#w_r').value.trim(),by:db.users[me].label});save();render()}
+function delWaste(id){if(!confirm('Delete this waste entry?'))return;db.waste=db.waste.filter(w=>w.id!==id);save();render()}
+
+/* ---------- shift closing ---------- */
+function closeRow(o,d,m){
+ const k=pkey(d,o.id,m),prod=prodSum(k,'prod'),disp=prodSum(k,'disp'),waste=wasteSum(d,o.id,m),exp=prod-disp-waste;
+ const cl=db.close[k],left=cl?cl.left:db.left[k];return{k,prod,disp,waste,exp,left,cl,pax:paxOf(d,o.id,m)};
+}
+V.close=function(){
+ const d=ui.date,m=ui.closeM;
+ const rows=db.outlets.map(o=>{const r=closeRow(o,d,m);const has=r.pax||r.prod||r.disp||r.waste;if(!has)return'';
+  const hasLeft=r.left!==undefined&&r.left!=='';const v=hasLeft?num(r.left)-r.exp:null;const bad=hasLeft&&Math.abs(v)>Math.max(0.5,r.prod*0.02);
+  return `<tr><td><b>${esc(o.name)}</b></td><td>${f0(r.pax)}</td><td>${f1(r.prod)}</td><td>${f1(r.disp)}</td><td>${f1(r.waste)}</td><td>${f1(r.exp)}</td>
+  <td><input type="number" step="0.1" value="${hasLeft?r.left:''}" ${r.cl?'disabled':''} onchange="setLeft('${r.k}',this.value)"></td>
+  <td>${hasLeft?`<span class="chip ${bad?'bad':'ok'}">${v>0?'+':''}${f1(v)} kg</span>`:'–'}</td>
+  <td>${r.cl?`<span class="chip ok">Closed</span> <span class="muted">${esc(r.cl.by)}</span>${isMgr()?` <button class="lnk" onclick="reopen('${r.k}')">Reopen</button>`:''}`:`<button class="btn" onclick="closeShift('${r.k}')">Close shift</button>`}</td></tr>`}).join('');
+ return `<div class="bar"><h2>Shift Closing</h2>${dateBar()}<select onchange="ui.closeM=this.value;render()">${mealOpts(m)}</select><button class="btn s" onclick="closeAll()">Close all open shifts</button></div>
+ <div class="card tw"><p class="muted" style="margin-top:0">Expected leftover = produced − dispatched − waste (calculated automatically). Enter the physical leftover to see the variance; a variance above 2% of production (or 0.5 kg) is flagged.</p>
+ <table><tr><th>Outlet</th><th>Pax</th><th>Produced kg</th><th>Dispatched kg</th><th>Waste kg</th><th>Expected leftover</th><th>Physical leftover</th><th>Variance</th><th>Status</th></tr>${rows||'<tr><td colspan="9" class="muted">Nothing recorded for this date and meal.</td></tr>'}</table></div>`;
+};
+function setLeft(k,v){db.left[k]=v===''?'':num(v);save();render()}
+function doClose(k){const[d,oid,m]=k.split('|');const r=closeRow(outletById(oid),d,m);const left=(r.left===undefined||r.left==='')?Math.round(r.exp*10)/10:num(r.left);
+ db.close[k]={left,exp:r.exp,by:db.users[me].label,at:new Date().toISOString()}}
+function closeShift(k){const[d,oid,m]=k.split('|');const r=closeRow(outletById(oid),d,m);if((r.left===undefined||r.left==='')&&!confirm('No physical leftover entered. Close using the expected leftover?'))return;doClose(k);save();render()}
+function closeAll(){let n=0;db.outlets.forEach(o=>{const r=closeRow(o,ui.date,ui.closeM);if((r.pax||r.prod||r.waste)&&!r.cl){doClose(r.k);n++}});save();render();toast(n+' shift(s) closed')}
+function reopen(k){if(!confirm('Reopen this shift?'))return;delete db.close[k];save();render()}
+
+/* ---------- reports ---------- */
+function repData(){
+ const f=ui.rf,t=ui.rt,sel=ui.ro;const inR=d=>d>=f&&d<=t;const ok=o=>sel==='all'||o===sel;
+ const by={};db.outlets.forEach(o=>{if(ok(o.id))by[o.id]={o:o.name,pax:0,prod:0,disp:0,waste:0}});
+ const daily={};const pr=[];
+ Object.keys(db.prod).forEach(k=>{const[d,oid,m]=k.split('|');if(!inR(d)||!ok(oid)||!by[oid])return;db.prod[k].forEach(r=>{by[oid].prod+=num(r.prod);by[oid].disp+=num(r.disp);daily[d]=daily[d]||{prod:0,disp:0,waste:0};daily[d].prod+=num(r.prod);daily[d].disp+=num(r.disp);pr.push([d,by[oid].o,m,r.n,r.g||'',r.prod,r.disp])})});
+ Object.keys(db.pax).forEach(d=>{if(!inR(d))return;Object.keys(db.pax[d]).forEach(oid=>{if(by[oid])MEALS.forEach(m=>by[oid].pax+=num(db.pax[d][oid][m]))})});
+ const ws=db.waste.filter(w=>inR(w.date)&&ok(w.o)&&by[w.o]);const wt={},wi={};
+ ws.forEach(w=>{by[w.o].waste+=num(w.q);daily[w.date]=daily[w.date]||{prod:0,disp:0,waste:0};daily[w.date].waste+=num(w.q);wt[w.t]=(wt[w.t]||0)+num(w.q);const k=w.i.toLowerCase();wi[k]=wi[k]||{n:w.i,q:0};wi[k].q+=num(w.q)});
+ return{by:Object.values(by),daily,wt,wi:Object.values(wi).sort((a,b)=>b.q-a.q).slice(0,10),ws,pr};
+}
+V.rep=function(){
+ const R=repData();const T=R.by.reduce((s,x)=>({pax:s.pax+x.pax,prod:s.prod+x.prod,disp:s.disp+x.disp,waste:s.waste+x.waste}),{pax:0,prod:0,disp:0,waste:0});
+ const pct=(w,p)=>p?f1(w/p*100)+'%':'–';
+ return `<div class="bar"><h2>MIS Reports</h2>From <input type="date" value="${ui.rf}" onchange="ui.rf=this.value;render()"> to <input type="date" value="${ui.rt}" onchange="ui.rt=this.value;render()"><select onchange="ui.ro=this.value;render()">${outletOpts(ui.ro,true)}</select>
+ <button class="btn s" onclick="expRep('sum')">⬇ Summary</button><button class="btn s" onclick="expRep('prod')">⬇ Production</button><button class="btn s" onclick="expRep('waste')">⬇ Waste</button></div>
+ <div class="card tw"><h3>Summary by outlet</h3><table><tr><th>Outlet</th><th>Pax</th><th>Produced kg</th><th>Dispatched kg</th><th>Waste kg</th><th>Waste %</th><th>Waste g/person</th></tr>
+ ${R.by.map(x=>`<tr><td>${esc(x.o)}</td><td>${f0(x.pax)}</td><td>${f1(x.prod)}</td><td>${f1(x.disp)}</td><td>${f1(x.waste)}</td><td>${pct(x.waste,x.prod)}</td><td>${x.pax?f0(x.waste*1000/x.pax):'–'}</td></tr>`).join('')}
+ <tr><td><b>Total</b></td><td><b>${f0(T.pax)}</b></td><td><b>${f1(T.prod)}</b></td><td><b>${f1(T.disp)}</b></td><td><b>${f1(T.waste)}</b></td><td><b>${pct(T.waste,T.prod)}</b></td><td><b>${T.pax?f0(T.waste*1000/T.pax):'–'}</b></td></tr></table></div>
+ <div class="grid"><div class="card tw"><h3>Waste by type</h3><table>${Object.keys(R.wt).map(k=>`<tr><td>${esc(k)}</td><td>${f1(R.wt[k])} kg</td></tr>`).join('')||'<tr><td class="muted">No waste</td></tr>'}</table></div>
+ <div class="card tw"><h3>Top wasted items</h3><table>${R.wi.map(x=>`<tr><td>${esc(x.n)}</td><td>${f1(x.q)} kg</td></tr>`).join('')||'<tr><td class="muted">No waste</td></tr>'}</table></div></div>
+ <div class="card tw"><h3>Daily trend</h3><table><tr><th>Date</th><th>Produced kg</th><th>Dispatched kg</th><th>Waste kg</th><th>Waste %</th></tr>${Object.keys(R.daily).sort().map(d=>{const x=R.daily[d];return `<tr><td>${d}</td><td>${f1(x.prod)}</td><td>${f1(x.disp)}</td><td>${f1(x.waste)}</td><td>${pct(x.waste,x.prod)}</td></tr>`}).join('')||'<tr><td colspan="5" class="muted">No data in this range</td></tr>'}</table></div>`;
+};
+function expRep(w){const R=repData();let rows;
+ if(w==='sum')rows=[['Outlet','Pax','Produced kg','Dispatched kg','Waste kg']].concat(R.by.map(x=>[x.o,x.pax,x.prod,x.disp,x.waste]));
+ else if(w==='prod')rows=[['Date','Outlet','Meal','Item','g per person','Produced kg','Dispatched kg']].concat(R.pr);
+ else rows=[['Date','Outlet','Meal','Item','Kg','Type','Remarks','By']].concat(R.ws.map(x=>[x.date,(outletById(x.o)||{}).name,x.m,x.i,x.q,x.t,x.r,x.by]));
+ download(`report-${w}-${ui.rf}-to-${ui.rt}.csv`,csv(rows))}
+
+/* ---------- settings ---------- */
+V.set=function(){
+ const own=isOwner(),mg=isMgr(),c=db.company;
+ const defPw=Object.keys(db.users).filter(u=>db.users[u].pw===({owner:'owner123',gm:'gm123',prod:'prod123'})[u]);
+ return `<div class="bar"><h2>Settings</h2></div>
+ ${defPw.length&&own?`<div class="al r">Default passwords are still in use for: ${defPw.map(u=>esc(db.users[u].label)).join(', ')}. Please change them below.</div>`:''}
+ <div class="card"><h3>Company branding ${own?'':'<span class="chip">Owner only</span>'}</h3>
+ <div class="bar">${logoHTML()}<input id="s_n" value="${esc(c.name)}" ${own?'':'disabled'} placeholder="Company name"><input id="s_b" value="${esc(c.by)}" ${own?'':'disabled'} placeholder="By"><input id="s_t" value="${esc(c.tagline)}" ${own?'':'disabled'} placeholder="Tagline">
+ ${own?`<label class="btn s">Upload logo<input type="file" accept="image/*" hidden onchange="setLogo(this.files[0])"></label><button class="btn s" onclick="rmLogo()">Remove logo</button><button class="btn" onclick="saveBrand()">Save</button>`:''}</div></div>
+ ${mg?`<div class="card tw"><h3>Outlets &amp; portion limits (g per person; leave blank for no rule)</h3><table><tr><th>Outlet</th><th>Breakfast limit</th><th>Lunch limit</th><th></th></tr>
+ ${db.outlets.map(o=>`<tr><td><input value="${esc(o.name)}" onchange="outEdit('${o.id}','name',this.value)"></td><td><input type="number" value="${o.bf||''}" onchange="outEdit('${o.id}','bf',this.value)"></td><td><input type="number" value="${o.ln||''}" onchange="outEdit('${o.id}','ln',this.value)"></td><td><button class="x" onclick="outDel('${o.id}')">×</button></td></tr>`).join('')}</table>
+ <button class="lnk" onclick="outAdd()">+ Add outlet</button></div>`:''}
+ <div class="card"><h3>Passwords</h3><button class="btn s" onclick="chPw('${me}')">Change my password</button>
+ ${own?Object.keys(db.users).filter(u=>u!==me).map(u=>` <button class="btn s" onclick="chPw('${u}')">Reset ${esc(db.users[u].label)} password</button>`).join(''):''}</div>
+ ${own?`<div class="card"><h3>Data &amp; backup</h3><p class="muted" style="margin-top:0">All data lives only in this browser on this device. Download a backup regularly.</p>
+ <button class="btn s" onclick="download('kitchen-mis-backup-'+todayStr()+'.json',JSON.stringify(db),'application/json')">⬇ Download full backup</button>
+ <label class="btn s">⬆ Restore backup<input type="file" accept=".json" hidden onchange="restore(this.files[0]);this.value=''"></label>
+ <button class="btn d" onclick="wipe()">Erase all data</button></div>`:''}`;
+};
+function saveBrand(){db.company.name=$('#s_n').value.trim()||'Kitchen';db.company.by=$('#s_b').value.trim();db.company.tagline=$('#s_t').value.trim();save();render();toast('Saved')}
+function setLogo(f){if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,160/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);db.company.logo=cv.toDataURL('image/png');save();render()};im.src=rd.result};rd.readAsDataURL(f)}
+function rmLogo(){db.company.logo='';save();render()}
+function outEdit(id,k,v){const o=outletById(id);o[k]=k==='name'?(v.trim()||o.name):num(v);save()}
+function outAdd(){const n=prompt('Outlet name');if(!n||!n.trim())return;db.outlets.push({id:'o'+uid(),name:n.trim(),bf:0,ln:0});save();render()}
+function outDel(id){if(!confirm('Delete this outlet and its weekly menu? Past production/waste records stay in storage.'))return;db.outlets=db.outlets.filter(o=>o.id!==id);delete db.menus[id];delete db.menuMeta[id];save();render()}
+function chPw(u){if(u===me&&prompt('Current password')!==db.users[me].pw)return toast('Current password is wrong');const p=prompt('New password for '+db.users[u].label+' (min 4 characters)');if(!p||p.length<4)return;db.users[u].pw=p;save();toast('Password changed');render()}
+function restore(f){if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const x=JSON.parse(rd.result);if(!x.outlets||!x.users)throw 0;if(!confirm('Replace ALL current data with this backup?'))return;db=Object.assign(defaultDB(),x);save();me=null;render()}catch(e){toast('Not a valid backup file')}};rd.readAsText(f)}
+function wipe(){if(!confirm('Erase ALL data on this device?')||prompt('Type ERASE to confirm')!=='ERASE')return;db=defaultDB();save();me=null;render()}
+
+render();
+</script>
+</body>
+</html>
